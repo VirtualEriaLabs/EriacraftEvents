@@ -1,6 +1,6 @@
 package com.virtualeria.eriaevents.event.behaviour;
 
-import com.virtualeria.eriaevents.event.behaviour.models.SpawnEntityEventBehaviourArgs;
+import com.virtualeria.eriaevents.event.behaviour.model.SpawnEntityEventBehaviourArgs;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
@@ -12,7 +12,7 @@ public class SpawnEntityEventBehaviour extends EventBehaviour<SpawnEntityEventBe
 
   @Override
   public void execute() {
-    args.getEntityList().forEach(entity -> args.getWorld().spawnEntity(entity));
+    args.getEntityList().forEach(args.getWorld()::spawnEntity);
   }
 
   @Override

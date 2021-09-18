@@ -7,6 +7,24 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.NoArgsConstructor;
 
+
+
+/*
+* Features:
+* Make event creation more intuitive using suggestions of brigadier
+* Craete a command that handles player groups to be able to start events referencing groups
+* Make the clear area event accept a range and a positions to spawn an area in which the event appear
+* Make a cancel event comand
+* Make a command to create givables
+* Make events handle uids that are readable
+* Make a command to retrieve event information by uid
+* Make a command to create default events with suggestions
+* Create observables in Event class on certain parts (onStart, onFinish, onCancel, etc..)
+* Make a resource multiplier event
+* Make a airdrop event
+* Handle pleayer leaving server while in event
+* Make a buff event
+* */
 @NoArgsConstructor
 public final class EventHandler {
   final static Map<String, Event> activeEvents = new HashMap<>();

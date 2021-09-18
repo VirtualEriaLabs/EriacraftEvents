@@ -1,4 +1,4 @@
-package com.virtualeria.eriaevents.event.behaviour.models;
+package com.virtualeria.eriaevents.event.behaviour.model;
 
 import lombok.Builder;
 import lombok.Value;

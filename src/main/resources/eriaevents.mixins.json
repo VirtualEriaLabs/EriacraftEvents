@@ -4,6 +4,7 @@
   "package": "com.virtualeria.eriaevents.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
+    "OnDeathMixin"
   ],
   "client": [],
   "injectors": {
