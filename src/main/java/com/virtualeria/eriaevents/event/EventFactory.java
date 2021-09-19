@@ -1,47 +1,47 @@
 package com.virtualeria.eriaevents.event;
 
+import com.virtualeria.eriaevents.api.EriaGivable;
 import com.virtualeria.eriaevents.event.Event.EventDifficulty;
 import com.virtualeria.eriaevents.event.behaviour.EventBehaviour;
 import com.virtualeria.eriaevents.event.behaviour.SpawnEntityEventBehaviour;
-import com.virtualeria.eriaevents.event.behaviour.model.SpawnEntityEventBehaviourArgs;
+import com.virtualeria.eriaevents.event.reward.GivableItemStack;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.SkeletonEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.EntityList;
 import net.minecraft.world.World;
 
 public class EventFactory {
 
+  public static Optional<Event> buildEvent(String name, World world, EventDifficulty eventDifficulty, List<ServerPlayerEntity> players) {
+    if (name.equals("clearArea")) {
+      return Optional.ofNullable(ClearAreaEvents.clearAreaWithSkeletons(world, eventDifficulty, players));
+    }
+    return Optional.empty();
+  }
+
   public static Optional<Event> buildEvent(String name, World world, EventDifficulty eventDifficulty) {
     if (name.equals("clearArea")) {
-      return Optional.ofNullable(ClearAreaEvents.clearAreaWithSkeletons(world, eventDifficulty));
+      return Optional.ofNullable(ClearAreaEvents.clearAreaWithSkeletons(world, eventDifficulty, new ArrayList<>()));
     }
     return Optional.empty();
   }
 
   public class ClearAreaEvents {
-    public static Event clearAreaWithSkeletons(World world, EventDifficulty difficulty) {
-      switch (difficulty) {
-        case EASY -> {
-          return build(world, 5);
-        }
-        case NORMAL -> {
-          return build(world, 10);
-        }
-        case HARD -> {
-          return build(world, 15);
-        }
-        case EXTREME -> {
-          return build(world, 20);
-        }
-        default -> {
-          return build(world, 1);
-        }
-      }
+    public static Event clearAreaWithSkeletons(World world, EventDifficulty difficulty, List<ServerPlayerEntity> players) {
+      return switch (difficulty) {
+        case EASY -> build(world, 1, players);
+        case NORMAL -> build(world, 10, players);
+        case HARD -> build(world, 15, players);
+        case EXTREME -> build(world, 20, players);
+      };
     }
 
     /*
@@ -52,34 +52,29 @@ public class EventFactory {
     * If all players of event left event must vbe canceled
     * Where entities spawn matter, they must spawn at night and outside
     * */
-    private static Event build(World world, int quantity) {
+    private static Event build(World world, int quantity, List<ServerPlayerEntity> players) {
       Deque<EventBehaviour> deque = new ArrayDeque();
       EntityList entityList = new EntityList();
       for (int i = 0; i < quantity; i++) {
         SkeletonEntity skeletonEntity =
             new SkeletonEntity(EntityType.SKELETON, world);
-        var soyUnSupplier = new NbtCompound();
-        var soyUnSupplierCustom = new NbtCompound();
-        soyUnSupplier.putString("EriaEventID", "Misa");
-        skeletonEntity.writeNbt(soyUnSupplier);
-        soyUnSupplierCustom.putString("EriaEventID", "MisaCustom");
-        skeletonEntity.writeCustomDataToNbt(soyUnSupplierCustom);
-
         skeletonEntity.setPos(-250, 67, 103 + i);
         entityList.add(skeletonEntity);
       }
       deque.add(SpawnEntityEventBehaviour.builder()
-          .args(
-              SpawnEntityEventBehaviourArgs.builder()
-                  .entityList(entityList)
-                  .world(world)
-                  .build())
+          .winConditions(SpawnEntityEventBehaviour.getDefaultWinConditions())
+          .entityList(entityList)
           .build());
+
+      EriaGivable eriaGivable = GivableItemStack.builder()
+          .itemStack(new ItemStack(Items.DIAMOND,5))
+          .build();
 
       return Event.builder()
           .uid(EventHandler.generateRandomUID())
           .toApplyBehaviours(deque)
-          .participants(new ArrayList<>())
+          .prize(eriaGivable)
+          .participants(players)
           .build();
     }
   }

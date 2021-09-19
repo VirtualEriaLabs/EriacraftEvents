@@ -5,7 +5,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 
-public interface EriaGivable extends Function<ServerPlayerEntity, EriaGivable> {
+@FunctionalInterface
+public interface EriaGivable {
   String name = "Givable";
 
   EriaGivable apply(ServerPlayerEntity spe);
