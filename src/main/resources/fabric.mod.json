@@ -21,6 +21,12 @@
   "entrypoints": {
     "main": [
       "com.virtualeria.eriaevents.EriaEvents"
+    ],
+    "server": [
+      "com.virtualeria.eriaevents.EriaEvents"
+    ],
+    "client": [
+      "com.virtualeria.eriaevents.EriaEvents"
     ]
   },
   "mixins": [

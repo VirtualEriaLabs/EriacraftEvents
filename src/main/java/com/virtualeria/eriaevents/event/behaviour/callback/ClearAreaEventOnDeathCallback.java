@@ -1,13 +1,19 @@
 package com.virtualeria.eriaevents.event.behaviour.callback;
 
+import static com.virtualeria.eriaevents.event.EventRegistry.CUSTOM_TEST_PARTICLE;
+
 import com.virtualeria.eriaevents.event.EventHandler;
 import com.virtualeria.eriaevents.event.behaviour.EventBehaviour;
-import com.virtualeria.eriaevents.event.behaviour.SpawnEntityEventBehaviour;
+import com.virtualeria.eriaevents.event.behaviour.cleararea.SpawnEntityEventBehaviour;
+import com.virtualeria.eriaevents.event.behaviour.particle.CustomTestParticle;
 import java.util.function.Predicate;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 
 public interface ClearAreaEventOnDeathCallback {
@@ -41,6 +47,21 @@ public interface ClearAreaEventOnDeathCallback {
                   .ifPresent(eventBehaviour ->
                       entityOfClearAreaKilled((SpawnEntityEventBehaviour) eventBehaviour, event)
                   ));
+
+          if(source.getAttacker() != null && source.getAttacker().isPlayer()) {
+            ((ServerWorld) source.getAttacker().getEntityWorld()).spawnParticles(
+                (ServerPlayerEntity) source.getAttacker(),
+                CUSTOM_TEST_PARTICLE,
+                false,
+                source.getAttacker().getX(),
+                source.getAttacker().getY(),
+                source.getAttacker().getZ()+5,
+                20,
+                2.0,
+                2.0,
+                2.0,
+                0.0001);
+          }
 
           return ActionResult.SUCCESS;
         }

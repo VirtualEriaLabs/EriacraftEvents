@@ -1,5 +1,6 @@
-package com.virtualeria.eriaevents.event.behaviour;
+package com.virtualeria.eriaevents.event.behaviour.cleararea;
 
+import com.virtualeria.eriaevents.event.behaviour.EventBehaviour;
 import java.util.function.Predicate;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

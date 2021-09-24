@@ -3,7 +3,7 @@ package com.virtualeria.eriaevents.event;
 import com.virtualeria.eriaevents.api.EriaGivable;
 import com.virtualeria.eriaevents.event.Event.EventDifficulty;
 import com.virtualeria.eriaevents.event.behaviour.EventBehaviour;
-import com.virtualeria.eriaevents.event.behaviour.SpawnEntityEventBehaviour;
+import com.virtualeria.eriaevents.event.behaviour.cleararea.SpawnEntityEventBehaviour;
 import com.virtualeria.eriaevents.event.reward.GivableItemStack;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -61,6 +61,7 @@ public class EventFactory {
         skeletonEntity.setPos(-250, 67, 103 + i);
         entityList.add(skeletonEntity);
       }
+
       deque.add(SpawnEntityEventBehaviour.builder()
           .winConditions(SpawnEntityEventBehaviour.getDefaultWinConditions())
           .entityList(entityList)
