@@ -1,5 +1,7 @@
 package com.virtualeria.eriaevents.event.behaviour.callback;
 
+import com.virtualeria.eriaevents.event.BaseEvent;
+import com.virtualeria.eriaevents.event.events.cleararea.ClearAreaEvent;
 import com.virtualeria.eriaevents.event.EventHandler;
 import com.virtualeria.eriaevents.event.behaviour.EventBehaviour;
 import com.virtualeria.eriaevents.event.behaviour.SpawnEntityEventBehaviour;
@@ -30,12 +32,13 @@ public interface ClearAreaEventOnDeathCallback {
   static void register() {
     ClearAreaEventOnDeathCallback.EVENT.register(
         (entity, source) -> {
+          if(entity.world.isClient()) return ActionResult.SUCCESS;
           Predicate<EventBehaviour> entityOnActiveEvent = (eventBehaviour ->
               eventBehaviour instanceof SpawnEntityEventBehaviour spawnEntityBehaviour
                   && spawnEntityBehaviour.getEntityList().has(entity));
 
           EventHandler.activeEvents().stream()
-              .forEach(event -> event.getAppliedBehaviours().stream()
+              .forEach(event -> event.getEvent().getEventData().appliedBehaviours().stream()
                   .filter(entityOnActiveEvent)
                   .findFirst()
                   .ifPresent(eventBehaviour ->
@@ -49,10 +52,15 @@ public interface ClearAreaEventOnDeathCallback {
 
 
   static void entityOfClearAreaKilled(SpawnEntityEventBehaviour eventBehaviour,
-                                      com.virtualeria.eriaevents.event.Event event) {
+                                      BaseEvent event) {
     eventBehaviour.entityKilled();
     if (eventBehaviour.areAllDead()) {
-      EventHandler.finishEvent(event);
+      if(event instanceof ClearAreaEvent clearAreaEvent) {
+        clearAreaEvent.finishRound();
+      }
+      else {
+        EventHandler.finishEvent(event);
+      }
     }
   }
 

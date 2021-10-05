@@ -11,6 +11,7 @@ import net.minecraft.text.TranslatableText;
 @Builder
 @Value
 public class GivableItemStack implements EriaGivable {
+
   @NonNull
   ItemStack itemStack;
 

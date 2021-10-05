@@ -1,6 +1,7 @@
 package com.virtualeria.eriaevents.event;
 
 import com.virtualeria.eriaevents.api.EriaRewarder;
+import com.virtualeria.eriaevents.event.events.Event;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,35 +29,38 @@ import lombok.NoArgsConstructor;
  * */
 @NoArgsConstructor
 public final class EventHandler {
-  final static Map<String, Event> activeEvents = new HashMap<>();
+  final static Map<String, BaseEvent> activeEvents = new HashMap<>();
   final static EriaRewarder eriaRewarder = (player, reward) -> {
     player.forEach(reward::apply);
   };
 
-  public void startEvent(Event event) {
-    if (activeEvents.containsKey(event.getUid())) {
+  public void startEvent(BaseEvent baseEvent) {
+    Event event = baseEvent.getEvent();
+    if (activeEvents.containsKey(event.getEventData().uid())) {
       throw new EventException();
     }
-    event.start();
-    activeEvents.put(event.getUid(), event);
+    baseEvent.start();
+    activeEvents.put(event.getEventData().uid(), baseEvent);
   }
 
-  public static List<Event> activeEvents() {
+  public static List<BaseEvent> activeEvents() {
     return activeEvents.values().stream().toList();
   }
 
-  public static void finishEvent(Event event) {
-    event.tryToFinish((e) -> eriaRewarder.reward(e.getParticipants(), e.getPrize()));
-    activeEvents.remove(event.getUid());
+  public static void finishEvent(BaseEvent event) {
+    event.tryToFinish(
+        (e) -> eriaRewarder.reward(e.getEventData().participants(), e.getEventData().prize()));
+    activeEvents.remove(event.getEvent().getEventData().uid());
   }
 
-  public static Optional<Event> activeEventByUid(String uid) {
-    return activeEvents.values().stream().filter(event -> event.getUid().equals(uid)).findFirst();
+  public static Optional<BaseEvent> activeEventByUid(String uid) {
+    return activeEvents.values().stream()
+        .filter(event -> event.getEvent().getEventData().uid().equals(uid)).findFirst();
   }
 
-  public static void forceFinish(Event event) {
+  public static void forceFinish(BaseEvent event) {
     event.finish();
-    activeEvents.remove(event.getUid());
+    activeEvents.remove(event.getEvent().getEventData().uid());
   }
 
   public static Set<String> activeEventUids() {
@@ -67,6 +71,6 @@ public final class EventHandler {
     return UUID.randomUUID().toString();
   }
 
-  public class EventException extends RuntimeException {
+  public static class EventException extends RuntimeException {
   }
 }

@@ -8,8 +8,8 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.virtualeria.eriaevents.EriaEvents;
-import com.virtualeria.eriaevents.event.Event;
-import com.virtualeria.eriaevents.event.Event.EventDifficulty;
+import com.virtualeria.eriaevents.event.BaseEvent;
+import com.virtualeria.eriaevents.event.events.Event.EventDifficulty;
 import com.virtualeria.eriaevents.event.EventFactory;
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,7 +96,7 @@ public class CreateEventCommand {
 
   private static int execute(ServerCommandSource source, String name,
                              EventDifficulty eventDifficulty) {
-    Optional<Event> event =
+    Optional<BaseEvent> event =
         EventFactory.buildEvent(name, source.getWorld(), eventDifficulty);
 
     if (!event.isPresent()) {

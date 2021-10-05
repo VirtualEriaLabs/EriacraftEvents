@@ -1,17 +1,15 @@
-package com.virtualeria.eriaevents.event;
+package com.virtualeria.eriaevents.event.events;
 
-import com.virtualeria.eriaevents.api.EriaGivable;
+import com.virtualeria.eriaevents.event.BaseEvent;
 import com.virtualeria.eriaevents.event.behaviour.EventBehaviour;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
-import lombok.extern.log4j.Log4j2;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.LiteralText;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /*
  * Can events interact with other events?
@@ -34,29 +32,30 @@ import net.minecraft.server.network.ServerPlayerEntity;
  */
 @Builder
 @Value
-@Log4j2
-public class Event {
-  List<ServerPlayerEntity> participants;
-  String uid;
-  EriaGivable prize;
-  Deque<EventBehaviour> appliedBehaviours = new ArrayDeque<>();
-  Deque<EventBehaviour> toApplyBehaviours;
-  Predicate<Deque<EventBehaviour>> winConditions;
+@AllArgsConstructor
+public class Event implements BaseEvent {
+  private static final Logger LOGGER = LogManager.getLogger();
+  EventData eventData;
 
   /*
    * This performs actions necessary for the event to start
    * We can upgrade this by adding some Predicate that needs to be checked to be able to be started
    * */
   public final void start() {
-    log.debug("Starting event %s with behaviours: \n%s"
-        .formatted(this.uid, this.toApplyBehaviours.stream()
+    LOGGER.debug("Starting event %s with behaviours: \n%s"
+        .formatted(this.eventData.uid(), this.eventData.toApplyBehaviours().stream()
             .map(EventBehaviour::toString)
             .collect(Collectors.joining(") (", "(", ")"))));
-    toApplyBehaviours.forEach(e -> {
-      log.trace("Starting behaviour: %s".formatted(e.toString()));
-      e.execute();
-      appliedBehaviours.add(e);
+    this.getEventData().participants().stream().forEach(serverPlayerEntity -> {
+      serverPlayerEntity.sendMessage(new LiteralText("Event started."),false);
     });
+    var toApplySize = eventData.toApplyBehaviours().size();
+    for(int i = 0; i < toApplySize; i++) {
+      EventBehaviour eventBehaviour = eventData.toApplyBehaviours().poll();
+      LOGGER.trace("Starting behaviour: %s".formatted(eventBehaviour.toString()));
+      eventBehaviour.execute();
+      this.eventData.appliedBehaviours().add(eventBehaviour);
+    }
   }
 
   /*
@@ -64,18 +63,24 @@ public class Event {
    * If win conditions met reward players
    * */
   public final void tryToFinish(Consumer<Event> rewarderAction) {
-    log.debug("Trying to finish event with uid: %s".formatted(this.uid));
-    if (this.appliedBehaviours.stream().allMatch(EventBehaviour::behaviourWinConditionsMet)) {
+    LOGGER.debug("Trying to finish event with uid: %s".formatted(this.eventData.uid()));
+    if (this.eventData.appliedBehaviours().stream()
+        .allMatch(EventBehaviour::behaviourWinConditionsMet)) {
       rewarderAction.accept(this);
       this.finish();
       return;
     }
-    log.debug("Unable to finish event, win conditions not met");
+    LOGGER.debug("Unable to finish event, win conditions not met");
   }
 
   public final void finish() {
-    log.debug("Finished event with uid: %s".formatted(this.uid));
-    appliedBehaviours.forEach(EventBehaviour::undo);
+    LOGGER.debug("Finished event with uid: %s".formatted(this.eventData.uid()));
+    this.eventData.appliedBehaviours().forEach(EventBehaviour::undo);
+  }
+
+  @Override
+  public Event getEvent() {
+    return this;
   }
 
   public enum EventDifficulty {
