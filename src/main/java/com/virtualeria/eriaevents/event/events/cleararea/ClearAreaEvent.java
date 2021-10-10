@@ -74,6 +74,11 @@ public class ClearAreaEvent implements BaseEvent {
     event.tryToFinish(rewarderAction);
   }
 
+  @Override
+  public boolean canContinue() {
+    return this.event.canContinue();
+  }
+
 
   @Override
   public void finish() {

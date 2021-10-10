@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntity.class)
 public class OnDeathMixin {
-  @Inject(at = @At("TAIL"), method = "onDeath")
+  @Inject(at = @At("TAIL"), method = "onDea th")
   public void onDeath(DamageSource source, CallbackInfo ci) {
     ClearAreaEventOnDeathCallback.EVENT.invoker().updateEvent((LivingEntity)(Object) this,source);
   }

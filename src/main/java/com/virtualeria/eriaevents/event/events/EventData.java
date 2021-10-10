@@ -13,5 +13,6 @@ public record EventData(
     EriaGivable prize,
     Deque<EventBehaviour> appliedBehaviours,
     Deque<EventBehaviour> toApplyBehaviours,
-    Predicate<Deque<EventBehaviour>> winConditions) {
+    Predicate<Deque<EventBehaviour>> winConditions,
+    long duration) {
 }

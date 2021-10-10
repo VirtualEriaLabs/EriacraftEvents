@@ -84,7 +84,7 @@ public class EventFactory {
           .build();
 
       EventData eventData = new EventData(players, EventHandler.generateRandomUID(), eriaGivable,
-          new ArrayDeque<EventBehaviour>(), deque, null);
+          new ArrayDeque<EventBehaviour>(), deque, null,60000);
 
       return new Event(eventData);
     }
@@ -127,7 +127,7 @@ public class EventFactory {
           .build();
 
       EventData eventData = new EventData(players, EventHandler.generateRandomUID(), eriaGivable,
-          new ArrayDeque<>(), deque, null);
+          new ArrayDeque<>(), deque, null, 5000);
 
       Event event = new Event(eventData);
 

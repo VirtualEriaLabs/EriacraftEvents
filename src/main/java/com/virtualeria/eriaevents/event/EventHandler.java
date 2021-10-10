@@ -2,13 +2,19 @@ package com.virtualeria.eriaevents.event;
 
 import com.virtualeria.eriaevents.api.EriaRewarder;
 import com.virtualeria.eriaevents.event.events.Event;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import lombok.NoArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
 /*
@@ -29,7 +35,8 @@ import lombok.NoArgsConstructor;
  * */
 @NoArgsConstructor
 public final class EventHandler {
-  final static Map<String, BaseEvent> activeEvents = new HashMap<>();
+  private static final Logger LOGGER = LogManager.getLogger();
+  final static Map<String, BaseEvent> activeEvents = new ConcurrentHashMap<>();
   final static EriaRewarder eriaRewarder = (player, reward) -> {
     player.forEach(reward::apply);
   };
@@ -45,6 +52,16 @@ public final class EventHandler {
 
   public static List<BaseEvent> activeEvents() {
     return activeEvents.values().stream().toList();
+  }
+
+  public static void checkForConcludedEvents() {
+    Collections.unmodifiableMap(activeEvents).values().stream().forEach(event -> {
+          if (!event.canContinue()) {
+            LOGGER.debug("Event timed out: %s".formatted(event.getEvent().getEventData().uid()));
+            forceFinish(event);
+          }
+        }
+    );
   }
 
   public static void finishEvent(BaseEvent event) {

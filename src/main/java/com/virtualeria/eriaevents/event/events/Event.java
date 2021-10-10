@@ -1,5 +1,7 @@
 package com.virtualeria.eriaevents.event.events;
 
+import static net.minecraft.util.Util.getMeasuringTimeMs;
+
 import com.virtualeria.eriaevents.event.BaseEvent;
 import com.virtualeria.eriaevents.event.behaviour.EventBehaviour;
 import java.util.function.Consumer;
@@ -7,6 +9,7 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 import net.minecraft.text.LiteralText;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,18 +33,23 @@ import org.apache.logging.log4j.Logger;
  * - A way to check if it is active or not -> do we really need this? If we have a list of active events that should be enough
  * - A prize
  */
-@Builder
 @Value
 @AllArgsConstructor
 public class Event implements BaseEvent {
   private static final Logger LOGGER = LogManager.getLogger();
   EventData eventData;
+  @NonFinal long startedAt;
+
+  @Builder
+  public Event(EventData eventData) {
+    this.eventData = eventData;
+  }
 
   /*
    * This performs actions necessary for the event to start
    * We can upgrade this by adding some Predicate that needs to be checked to be able to be started
    * */
-  public final void start() {
+  public void start() {
     LOGGER.debug("Starting event %s with behaviours: \n%s"
         .formatted(this.eventData.uid(), this.eventData.toApplyBehaviours().stream()
             .map(EventBehaviour::toString)
@@ -56,13 +64,18 @@ public class Event implements BaseEvent {
       eventBehaviour.execute();
       this.eventData.appliedBehaviours().add(eventBehaviour);
     }
+    startedAt = getMeasuringTimeMs();
+  }
+
+  public boolean canContinue() {
+    return startedAt + eventData.duration() > getMeasuringTimeMs();
   }
 
   /*
    * We need to check if event win conditions are met
    * If win conditions met reward players
    * */
-  public final void tryToFinish(Consumer<Event> rewarderAction) {
+  public void tryToFinish(Consumer<Event> rewarderAction) {
     LOGGER.debug("Trying to finish event with uid: %s".formatted(this.eventData.uid()));
     if (this.eventData.appliedBehaviours().stream()
         .allMatch(EventBehaviour::behaviourWinConditionsMet)) {
@@ -73,7 +86,7 @@ public class Event implements BaseEvent {
     LOGGER.debug("Unable to finish event, win conditions not met");
   }
 
-  public final void finish() {
+  public void finish() {
     LOGGER.debug("Finished event with uid: %s".formatted(this.eventData.uid()));
     this.eventData.appliedBehaviours().forEach(EventBehaviour::undo);
   }
