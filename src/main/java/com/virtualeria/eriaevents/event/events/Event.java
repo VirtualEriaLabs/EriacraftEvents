@@ -38,7 +38,8 @@ import org.apache.logging.log4j.Logger;
 public class Event implements BaseEvent {
   private static final Logger LOGGER = LogManager.getLogger();
   EventData eventData;
-  @NonFinal long startedAt;
+  @NonFinal
+  long startedAt;
 
   @Builder
   public Event(EventData eventData) {
@@ -55,10 +56,10 @@ public class Event implements BaseEvent {
             .map(EventBehaviour::toString)
             .collect(Collectors.joining(") (", "(", ")"))));
     this.getEventData().participants().stream().forEach(serverPlayerEntity -> {
-      serverPlayerEntity.sendMessage(new LiteralText("Event started."),false);
+      serverPlayerEntity.sendMessage(new LiteralText("Event started."), false);
     });
     var toApplySize = eventData.toApplyBehaviours().size();
-    for(int i = 0; i < toApplySize; i++) {
+    for (int i = 0; i < toApplySize; i++) {
       EventBehaviour eventBehaviour = eventData.toApplyBehaviours().poll();
       LOGGER.trace("Starting behaviour: %s".formatted(eventBehaviour.toString()));
       eventBehaviour.execute();
@@ -68,7 +69,7 @@ public class Event implements BaseEvent {
   }
 
   public boolean canContinue() {
-    return startedAt + eventData.duration() > getMeasuringTimeMs();
+    return eventData.duration() == 0 || startedAt + eventData.duration() > getMeasuringTimeMs();
   }
 
   /*

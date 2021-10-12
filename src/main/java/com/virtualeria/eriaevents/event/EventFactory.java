@@ -1,12 +1,12 @@
 package com.virtualeria.eriaevents.event;
 
 import com.virtualeria.eriaevents.api.EriaGivable;
-import com.virtualeria.eriaevents.event.events.cleararea.ClearAreaEvent;
-import com.virtualeria.eriaevents.event.events.Event;
-import com.virtualeria.eriaevents.event.events.Event.EventDifficulty;
 import com.virtualeria.eriaevents.event.behaviour.EventBehaviour;
 import com.virtualeria.eriaevents.event.behaviour.SpawnEntityEventBehaviour;
+import com.virtualeria.eriaevents.event.events.Event;
+import com.virtualeria.eriaevents.event.events.Event.EventDifficulty;
 import com.virtualeria.eriaevents.event.events.EventData;
+import com.virtualeria.eriaevents.event.events.cleararea.ClearAreaEvent;
 import com.virtualeria.eriaevents.event.reward.GivableItemStack;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -27,51 +27,63 @@ public class EventFactory {
 
   public static Optional<BaseEvent> buildEvent(String name, World world,
                                                EventDifficulty eventDifficulty,
+                                               Integer duration,
                                                List<ServerPlayerEntity> players) {
     if (name.equals("clearArea")) {
       return Optional
-          .ofNullable(ClearAreaEvents.clearAreaWithSkeletons(world, eventDifficulty, players));
+          .ofNullable(
+              ClearAreaEvents.clearAreaWithSkeletons(world, eventDifficulty, duration, players));
     } else if (name.equals("clearAreaWithRounds")) {
       return Optional.ofNullable(
-          ClearAreaEvents.clearAreaWithSkeletonsAndRounds(world, eventDifficulty, players));
+          ClearAreaEvents.clearAreaWithSkeletonsAndRounds(world, eventDifficulty, duration,
+              players));
     }
     return Optional.empty();
   }
 
   public static Optional<BaseEvent> buildEvent(String name, World world,
+                                               EventDifficulty eventDifficulty,
+                                               Integer duration) {
+    return buildEvent(name, world, eventDifficulty, duration, new ArrayList<>());
+  }
+
+  public static Optional<BaseEvent> buildEvent(String name, World world,
                                                EventDifficulty eventDifficulty) {
-    return buildEvent(name, world, eventDifficulty, new ArrayList<>());
+    return buildEvent(name, world, eventDifficulty, 0, new ArrayList<>());
   }
 
   public class ClearAreaEvents {
     public static BaseEvent clearAreaWithSkeletons(World world, EventDifficulty difficulty,
+                                                   Integer duration,
                                                    List<ServerPlayerEntity> players) {
       return switch (difficulty) {
-        case EASY -> build(world, 1, players);
-        case NORMAL -> build(world, 10, players);
-        case HARD -> build(world, 15, players);
-        case EXTREME -> build(world, 20, players);
+        case EASY -> build(world, 1, duration, players);
+        case NORMAL -> build(world, 10, duration, players);
+        case HARD -> build(world, 15, duration, players);
+        case EXTREME -> build(world, 20, duration, players);
       };
     }
 
     public static BaseEvent clearAreaWithSkeletonsAndRounds(World world, EventDifficulty difficulty,
+                                                            int duration,
                                                             List<ServerPlayerEntity> players) {
       return switch (difficulty) {
-        case EASY -> buildWithRounds(world, 1, players);
-        case NORMAL -> buildWithRounds(world, 10, players);
-        case HARD -> buildWithRounds(world, 15, players);
-        case EXTREME -> buildWithRounds(world, 20, players);
+        case EASY -> buildWithRounds(world, 1, duration, players);
+        case NORMAL -> buildWithRounds(world, 10, duration, players);
+        case HARD -> buildWithRounds(world, 15, duration, players);
+        case EXTREME -> buildWithRounds(world, 20, duration, players);
       };
     }
 
-    private static BaseEvent build(World world, int quantity, List<ServerPlayerEntity> players) {
+    private static BaseEvent build(World world, int quantity, int duration,
+                                   List<ServerPlayerEntity> players) {
       Deque<EventBehaviour> deque = new ArrayDeque();
       ServerPlayerEntity player = players.get(0);
       EntityList entityList = new EntityList();
       for (int i = 0; i < quantity; i++) {
         SkeletonEntity skeletonEntity =
             new SkeletonEntity(EntityType.SKELETON, world);
-        skeletonEntity.setPos(player.getX(), player.getY()+1, player.getZ() + 10 + i);
+        skeletonEntity.setPos(player.getX(), player.getY() + 1, player.getZ() + 10 + i);
         entityList.add(skeletonEntity);
       }
       deque.add(SpawnEntityEventBehaviour.builder()
@@ -84,12 +96,12 @@ public class EventFactory {
           .build();
 
       EventData eventData = new EventData(players, EventHandler.generateRandomUID(), eriaGivable,
-          new ArrayDeque<EventBehaviour>(), deque, null,60000);
+          new ArrayDeque<EventBehaviour>(), deque, null, duration);
 
       return new Event(eventData);
     }
 
-    private static BaseEvent buildWithRounds(World world, int quantity,
+    private static BaseEvent buildWithRounds(World world, int quantity, int duration,
                                              List<ServerPlayerEntity> players) {
       Deque<EventBehaviour> deque = new ArrayDeque();
       ServerPlayerEntity player = players.get(0);
@@ -97,7 +109,7 @@ public class EventFactory {
       for (int i = 0; i < quantity; i++) {
         SkeletonEntity skeletonEntity =
             new SkeletonEntity(EntityType.SKELETON, world);
-        skeletonEntity.equipStack(EquipmentSlot.MAINHAND,new ItemStack(Items.BOW));
+        skeletonEntity.equipStack(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
         skeletonEntity.setPos(player.getX(), player.getY() + 1, player.getZ() + 10 + i);
         entityList.add(skeletonEntity);
       }
@@ -105,7 +117,7 @@ public class EventFactory {
       for (int i = 0; i < quantity; i++) {
         ZombieEntity skeletonEntity =
             new ZombieEntity(EntityType.ZOMBIE, world);
-        skeletonEntity.setPos(player.getX(), player.getY()+1, player.getZ() + 10 + i);
+        skeletonEntity.setPos(player.getX(), player.getY() + 1, player.getZ() + 10 + i);
         entityList1.add(skeletonEntity);
       }
 
@@ -127,7 +139,7 @@ public class EventFactory {
           .build();
 
       EventData eventData = new EventData(players, EventHandler.generateRandomUID(), eriaGivable,
-          new ArrayDeque<>(), deque, null, 5000);
+          new ArrayDeque<>(), deque, null, duration);
 
       Event event = new Event(eventData);
 

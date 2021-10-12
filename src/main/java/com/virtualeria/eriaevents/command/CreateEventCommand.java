@@ -9,13 +9,14 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.virtualeria.eriaevents.EriaEvents;
 import com.virtualeria.eriaevents.event.BaseEvent;
-import com.virtualeria.eriaevents.event.events.Event.EventDifficulty;
 import com.virtualeria.eriaevents.event.EventFactory;
+import com.virtualeria.eriaevents.event.events.Event.EventDifficulty;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.command.argument.TimeArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
@@ -24,7 +25,8 @@ public class CreateEventCommand {
 
   public final static String BY_NAME_FIRST_ARG = "name";
   public final static String BY_NAME_SECOND_ARG = "difficulty";
-  public final static String BY_NAME_THIRD_ARG = "players";
+  public final static String BY_TIME_THIRD_ARG = "duration";
+  public final static String BY_NAME_FOURTH_ARG = "players";
 
   public static void register(CommandDispatcher<ServerCommandSource> dispatcher, boolean b) {
     var eventBuilderByName =
@@ -42,21 +44,30 @@ public class CreateEventCommand {
                     StringArgumentType.getString(context, BY_NAME_FIRST_ARG),
                     StringArgumentType.getString(context, BY_NAME_SECOND_ARG)));
 
+    var eventDurationIntArg =
+        argument(BY_TIME_THIRD_ARG, TimeArgumentType.time())
+            .executes(context -> execute(context.getSource(),
+                StringArgumentType.getString(context, BY_NAME_FIRST_ARG),
+                StringArgumentType.getString(context, BY_NAME_SECOND_ARG),
+                context.getArgument(BY_TIME_THIRD_ARG, Integer.class)));
+
     var playersNameArg =
-        argument(BY_NAME_THIRD_ARG, EntityArgumentType.players())
+        argument(BY_NAME_FOURTH_ARG, EntityArgumentType.players())
             .executes(context ->
                 execute(
                     context.getSource(),
                     StringArgumentType.getString(context, BY_NAME_FIRST_ARG),
                     StringArgumentType.getString(context, BY_NAME_SECOND_ARG),
-                    EntityArgumentType.getPlayers(context, BY_NAME_THIRD_ARG)
+                    context.getArgument(BY_TIME_THIRD_ARG, Integer.class),
+                    EntityArgumentType.getPlayers(context, BY_NAME_FOURTH_ARG)
                 )
             );
 
     var command =
         dispatcher.register(
             eventBuilderByName
-                .then(nameArg.then(requiredDifficultyAfterNameArg.then(playersNameArg))));
+                .then(nameArg.then(requiredDifficultyAfterNameArg.then(
+                    eventDurationIntArg.then(playersNameArg)))));
 
     dispatcher
         .register(literal(BASE_ALIAS_NAME).requires((source) -> source.hasPermissionLevel(2))
@@ -64,11 +75,33 @@ public class CreateEventCommand {
   }
 
   private static int execute(ServerCommandSource source, String name, String difficulty,
+                             Integer duration,
                              Collection<ServerPlayerEntity> players) {
     try {
       EventFactory
           .buildEvent(name, source.getWorld(), EventDifficulty.valueOf(difficulty.toUpperCase()),
+              duration * 50,
               players.stream().toList())
+          .ifPresentOrElse(
+              (event) -> EriaEvents.eventHandler.startEvent(event),
+              () -> source.sendError(new LiteralText("Error creating event  %s".formatted(name)))
+          );
+    } catch (IllegalArgumentException argumentException) {
+      source.sendError(new LiteralText("Error, difficulty values  - %s - ".formatted(
+          Arrays.stream(EventDifficulty.values()).map(Enum::name)
+              .collect(
+                  Collectors.joining(", ")))));
+    }
+    return Command.SINGLE_SUCCESS;
+  }
+
+
+  private static int execute(ServerCommandSource source, String name, String difficulty,
+                             Integer duration) {
+    try {
+      EventFactory
+          .buildEvent(name, source.getWorld(), EventDifficulty.valueOf(difficulty.toUpperCase()),
+              duration * 50)
           .ifPresentOrElse(
               (event) -> EriaEvents.eventHandler.startEvent(event),
               () -> source.sendError(new LiteralText("Error creating event  %s".formatted(name)))
