@@ -55,7 +55,7 @@ public class Event implements BaseEvent {
         .formatted(this.eventData.uid(), this.eventData.toApplyBehaviours().stream()
             .map(EventBehaviour::toString)
             .collect(Collectors.joining(") (", "(", ")"))));
-    this.getEventData().participants().stream().forEach(serverPlayerEntity -> {
+    this.getEventData().participants().forEach(serverPlayerEntity -> {
       serverPlayerEntity.sendMessage(new LiteralText("Event started."), false);
     });
     var toApplySize = eventData.toApplyBehaviours().size();

@@ -6,6 +6,8 @@ import java.util.Deque;
 import java.util.List;
 import java.util.function.Predicate;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.event.BlockPositionSource;
 
 public record EventData(
     List<ServerPlayerEntity> participants,
@@ -14,5 +16,6 @@ public record EventData(
     Deque<EventBehaviour> appliedBehaviours,
     Deque<EventBehaviour> toApplyBehaviours,
     Predicate<Deque<EventBehaviour>> winConditions,
-    long duration) {
+    long duration,
+    BlockPos position) {
 }
